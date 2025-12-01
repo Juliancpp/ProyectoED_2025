@@ -2,6 +2,7 @@ package com.example.services;
 
 import com.example.models.Paciente;
 import com.example.models.Priority;
+import com.example.models.TriageLevel;
 import com.example.TDAs.TreeMap;
 
 import java.time.Duration;
@@ -74,7 +75,8 @@ public class HospitalService {
 
     tiempoAcumuladoEspera += tiempoEspera;
     pacientesConTiempo++;
-
+    p.registrarConsulta();
+    
     return p;
     }
 
@@ -130,6 +132,10 @@ public class HospitalService {
 
     public int getTotalEliminaciones() {
         return totalEliminaciones;
+    }
+
+    public int countByTriageLevel(TriageLevel level) {
+    return triageService.countByLevel(level);
     }
 
     public TreeMap<Integer, Paciente> getABB() { return abbPacientes; }

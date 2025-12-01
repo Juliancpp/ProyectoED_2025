@@ -13,7 +13,7 @@ public class Paciente {
     private String sintomas;
     private Priority prioridad;
     private final LocalDateTime fechaIngreso;
-    private int accessCount = 0;
+    private int numeroConsultas = 0;
 
     public Paciente(String nombre, int edad, String sintomas, Priority prioridad) {
         this.id = ID_GENERATOR.getAndIncrement();
@@ -23,7 +23,7 @@ public class Paciente {
         this.prioridad = prioridad;
         this.fechaIngreso = LocalDateTime.now();
     }
-
+    
     // getters y setters
     public int getId() { return id; }
     public String getNombre() { return nombre; }
@@ -35,8 +35,8 @@ public class Paciente {
     public Priority getPrioridad() { return prioridad; }
     public void setPrioridad(Priority prioridad) { this.prioridad = prioridad; }
     public LocalDateTime getFechaIngreso() { return fechaIngreso; }
-    public int getAccessCount() { return accessCount; }
-    public void incrementAccess() { accessCount++; }
+    public int getNumeroConsultas() { return numeroConsultas; }
+    public void registrarConsulta() { this.numeroConsultas++; }
 
     @Override
     public String toString() {

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.controllers.RegistroController"
+      spacing="12" padding="20">
+
+    <Label text="Registrar Paciente" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+
+    <TextField fx:id="txtNombre" promptText="Nombre del paciente"/>
+    <TextField fx:id="txtEdad" promptText="Edad" />
+
+    <TextArea fx:id="txtSintomas" promptText="Describa los síntomas"
+              prefRowCount="3"/>
+
+    <ComboBox fx:id="comboPrioridad" promptText="Seleccione prioridad" />
+
+    <Button text="Registrar Paciente"
+            onAction="#registrarPaciente"
+            style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
+
+    <Label fx:id="lblEstado" text="" style="-fx-text-fill: blue;"/>
+
+</VBox>

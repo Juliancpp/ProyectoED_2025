@@ -3,7 +3,7 @@ import java.util.ArrayList; ///ver
 import java.util.List; ///ver
 
 public class SinglyLinkedList<E> {
-    protected static class Node<E> {
+    public static class Node<E> {
         protected E element;
         protected Node<E> next;
 
@@ -17,7 +17,7 @@ public class SinglyLinkedList<E> {
         public void setNext(Node<E> n) { next = n; }
     }
 
-    protected Node<E> head = null;
+    public Node<E> head = null;
     protected Node<E> tail = null;
     protected int size = 0;
 

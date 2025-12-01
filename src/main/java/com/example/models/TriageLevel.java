@@ -14,7 +14,6 @@ public enum TriageLevel {
     public int getLevel() { return level; }
 
     public static TriageLevel fromOrdinal(int ordinal) {
-        // ordinal 1..5 -> enum
         for (TriageLevel t : values()) if (t.level == ordinal) return t;
         return NIVEL_5_NO_URGENTE;
     }

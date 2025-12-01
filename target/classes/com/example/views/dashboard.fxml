@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.controllers.DashboardController">
+
+    <top>
+        <ToolBar>
+            <Button text="Registro" fx:id="btnRegistro" onAction="#mostrarRegistro"/>
+            <Button text="Atender" fx:id="btnAtender" onAction="#mostrarAtender"/>
+            <Button text="Cola" fx:id="btnCola" onAction="#mostrarCola"/>
+            <Button text="Árboles" fx:id="btnArboles" onAction="#mostrarArboles"/>
+            <Button text="Estadísticas" fx:id="btnEstadisticas" onAction="#mostrarEstadisticas"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Refrescar" onAction="#refrescarDashboard"/>
+        </ToolBar>
+    </top>
+
+    <center>
+        <AnchorPane fx:id="contentPane" prefHeight="600" prefWidth="1000" />
+    </center>
+
+    <bottom>
+        <HBox spacing="18" padding="10" alignment="CENTER_LEFT">
+            <Label text="Total:"/>
+            <Label fx:id="lblTotalPacientes" text="0" style="-fx-font-weight: bold;"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="En espera:"/>
+            <Label fx:id="lblEnEspera" text="0" style="-fx-font-weight: bold;"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="Urgente (N2):"/>
+            <Label fx:id="lblUrgente" text="0"/>
+            <Label text="Medio (N3):"/>
+            <Label fx:id="lblMedio" text="0"/>
+            <Label text="Leve (N5):"/>
+            <Label fx:id="lblLeve" text="0"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lblUltimoAtendido" text="Último atendido: -"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

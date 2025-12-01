@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.controllers.ColaController"
+            padding="16">
+
+    <center>
+        <TableView fx:id="tablaCola" prefHeight="300">
+            <columns>
+                <TableColumn fx:id="colNombre" text="Nombre" prefWidth="150"/>
+                <TableColumn fx:id="colEdad" text="Edad" prefWidth="80"/>
+                <TableColumn fx:id="colPrioridad" text="Prioridad" prefWidth="150"/>
+            </columns>
+        </TableView>
+    </center>
+
+    <bottom>
+        <VBox spacing="10" padding="10" style="-fx-background-color: #f7f7f7; -fx-border-color: #ccc;">
+
+            <Label text="Detalles del Paciente" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+            <GridPane hgap="10" vgap="6">
+
+                <Label text="ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="lblId" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Nombre:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="lblNombre" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="Edad:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="lblEdad" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Síntomas:" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <Label fx:id="lblSintomas" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+                <Label text="Prioridad:" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+                <Label fx:id="lblPrioridad" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+
+                <Label text="Consultas:" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+                <Label fx:id="lblConsultas" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            </GridPane>
+        </VBox>
+    </bottom>
+
+</BorderPane>
