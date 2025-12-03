@@ -27,7 +27,7 @@ public class BalanceableBinaryTree<K, V> extends LinkedBinaryTree<Entry<K, V>> {
     }
 
 
-    protected TreeNode<Entry<K, V>> creaNode(Entry<K, V> element,TreeNode<Entry<K, V>> parent, TreeNode<Entry<K, V>> left, TreeNode<Entry<K, V>> right) {
+    protected TreeNode<Entry<K, V>> createNode(Entry<K, V> element,TreeNode<Entry<K, V>> parent, TreeNode<Entry<K, V>> left, TreeNode<Entry<K, V>> right) {
         return new BSTNode<>(element, parent, left, right);
     }
 

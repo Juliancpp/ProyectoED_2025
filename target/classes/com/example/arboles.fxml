@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.Group?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.controllers.ArbolesController"
+            prefWidth="1000" prefHeight="700">
+
+    <SplitPane dividerPositions="0.33, 0.66" 
+               AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" 
+               AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
+        
+        <items>
+            <VBox spacing="5">
+                <Label text="ÁRBOL ABB (TreeMap)" style="-fx-font-weight: bold; -fx-padding: 5;"/>
+                <ScrollPane fitToHeight="true" fitToWidth="true" pannable="true" VBox.vgrow="ALWAYS">
+                    <content>
+                        <Group>
+                            <Canvas fx:id="canvasABB" width="300" height="600"/>
+                        </Group>
+                    </content>
+                </ScrollPane>
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="ÁRBOL AVL (AVLTreeMap)" style="-fx-font-weight: bold; -fx-padding: 5;"/>
+                <ScrollPane fitToHeight="true" fitToWidth="true" pannable="true" VBox.vgrow="ALWAYS">
+                    <content>
+                        <Group>
+                            <Canvas fx:id="canvasAVL" width="300" height="600"/>
+                        </Group>
+                    </content>
+                </ScrollPane>
+            </VBox>
+
+            <VBox spacing="5">
+                <Label text="ÁRBOL SPLAY (SplayTreeMap)" style="-fx-font-weight: bold; -fx-padding: 5;"/>
+                <ScrollPane fitToHeight="true" fitToWidth="true" pannable="true" VBox.vgrow="ALWAYS">
+                    <content>
+                        <Group>
+                            <Canvas fx:id="canvasSplay" width="300" height="600"/>
+                        </Group>
+                    </content>
+                </ScrollPane>
+            </VBox>
+        </items>
+        
+    </SplitPane>
+
+</AnchorPane>

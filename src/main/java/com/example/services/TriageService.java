@@ -1,17 +1,18 @@
 package com.example.services;
 
-import com.example.models.Paciente;
-import com.example.models.Priority;
-import com.example.models.TriageLevel;
 import com.example.TDAs.DoubleHashMap;
 import com.example.TDAs.Entry;
 import com.example.TDAs.HeapAdaptablePriorityQueue;
 import com.example.TDAs.SinglyLinkedList;
+import com.example.models.Paciente;
+import com.example.models.Priority;
+import com.example.models.TriageLevel;
 
 public class TriageService {
 
     private final HeapAdaptablePriorityQueue<KeyPaciente, Paciente> globalHeap;
     private final HeapAdaptablePriorityQueue<KeyPaciente, Paciente>[] heapsByLevel;
+    
     private final DoubleHashMap<Integer, Entry<KeyPaciente, Paciente>> indexGlobal;
     private final DoubleHashMap<String, Entry<KeyPaciente, Paciente>> indexByLevel;
 
@@ -53,13 +54,22 @@ public class TriageService {
         TriageLevel level = mapPriorityToTriage(p.getPrioridad());
         String lvlKey = level.name() + "#" + p.getId();
         Entry<KeyPaciente, Paciente> le = indexByLevel.get(lvlKey);
+
         if (le != null) {
-            heapsByLevel[level.ordinal()].remove(le);
+            try {
+                heapsByLevel[level.ordinal()].remove(le);
+            } catch (Exception e) {
+
+                System.err.println("Advertencia: Inconsistencia en heap de nivel para paciente " + p.getId() + ". Continuando...");
+
+            }
             indexByLevel.remove(lvlKey);
         }
+        
         return p;
     }
 
+    @SuppressWarnings("unchecked")
     public SinglyLinkedList<Paciente> snapshotOrdered() {
         int n = globalHeap.size();
         SinglyLinkedList<Paciente> out = new SinglyLinkedList<>();
@@ -98,29 +108,36 @@ public class TriageService {
 
         Paciente p = ge.getValue();
 
-        globalHeap.remove(ge);
+        try {
+            globalHeap.remove(ge);
+        } catch (Exception e) {
+            System.err.println("Error removiendo de globalHeap: " + e.getMessage());
+            return false;
+        }
         indexGlobal.remove(id);
 
         TriageLevel level = mapPriorityToTriage(p.getPrioridad());
         String lvlKey = level.name() + "#" + id;
         Entry<KeyPaciente, Paciente> le = indexByLevel.get(lvlKey);
+        
         if (le != null) {
-            heapsByLevel[level.ordinal()].remove(le);
+            try {
+                heapsByLevel[level.ordinal()].remove(le);
+            } catch (Exception e) {
+                System.err.println("Advertencia: Error al remover del nivel (id " + id + ")");
+            }
             indexByLevel.remove(lvlKey);
         }
         return true;
     }
 
     public boolean updatePriority(int id, Priority nuevaPrioridad) {
+
         Entry<KeyPaciente, Paciente> ge = indexGlobal.get(id);
         if (ge == null) return false;
-
         Paciente p = ge.getValue();
-
         removeById(id);
-
         p.setPrioridad(nuevaPrioridad);
-
         addPaciente(p);
         return true;
     }
@@ -161,5 +178,10 @@ public class TriageService {
             if (t != 0) return t;
             return Integer.compare(this.id, o.id);
         }
+    }
+
+    public Paciente peekNext() {
+    if (globalHeap.isEmpty()) return null;
+    return globalHeap.min().getValue();
     }
 }

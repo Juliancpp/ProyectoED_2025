@@ -1,182 +1,129 @@
 package com.example.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import com.example.TDAs.AVLTreeMap;
 import com.example.TDAs.Entry;
 import com.example.TDAs.Position;
-import com.example.TDAs.Tree;
-import com.example.TDAs.TreeMap;
-import com.example.TDAs.AVLTreeMap;
 import com.example.TDAs.SplayTreeMap;
+import com.example.TDAs.TreeMap;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 
-/**
- * TreeVisualizer: dibuja árboles que exponen API positional (root, left, right, isInternal).
- * Soporta:
- *  - Tree<Entry<K,V>> (tu interfaz Tree)
- *  - TreeMap<K,V>, AVLTreeMap<K,V>, SplayTreeMap<K,V> (sobrecargas)
- */
 public class TreeVisualizer<K, V> {
 
-    private static final int NODE_RADIUS = 22;
-    private static final int LEVEL_HEIGHT = 70;
-    private static final int H_SPACING = 40;
+    private static final int NODE_RADIUS = 20;
+    private static final int Y_SPACING = 60;
+    private static final int X_SPACING = 45;
 
     private final Color nodeColor;
     private final Color edgeColor;
+    
+    private int xCounter = 0;
+    private Map<Object, Point> positions;
 
     public TreeVisualizer(Color nodeColor, Color edgeColor) {
         this.nodeColor = nodeColor;
         this.edgeColor = edgeColor;
     }
 
-    /* ------------------------------------------
-       Método original: si tienes un Tree<Entry<K,V>>
-       ------------------------------------------ */
-    public void draw(Tree<Entry<K, V>> tree, Canvas canvas) {
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-
-        if (tree == null || tree.isEmpty()) {
-            gc.setFill(Color.GRAY);
-            gc.setFont(new Font(20));
-            gc.fillText("Árbol vacío", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
-            return;
-        }
-
-        int height = treeHeight(tree, tree.root());
-        double widthNeeded = Math.pow(2, height) * (NODE_RADIUS + H_SPACING);
-
-        canvas.setWidth(Math.max(canvas.getWidth(), widthNeeded));
-        canvas.setHeight(Math.max(canvas.getHeight(), height * LEVEL_HEIGHT + 100));
-
-        drawRecursive(gc, tree, tree.root(), canvas.getWidth() / 2, 60, canvas.getWidth() / 4);
-    }
-
-    /* ----------------------------------------------------------
-       NUEVAS SOBRECARGAS: aceptan directamente tus implementaciones
-       (asumen API pública: root(), left(p), right(p), isInternal(p))
-       ---------------------------------------------------------- */
-
     public void draw(TreeMap<K, V> map, Canvas canvas) {
-        drawFromPositionalProvider(map::root, map::left, map::right, map::isInternal, canvas);
+        drawUnified(map::root, map::left, map::right, canvas);
     }
 
     public void draw(AVLTreeMap<K, V> map, Canvas canvas) {
-        drawFromPositionalProvider(map::root, map::left, map::right, map::isInternal, canvas);
+        drawUnified(map::root, map::left, map::right, canvas);
     }
 
     public void draw(SplayTreeMap<K, V> map, Canvas canvas) {
-        drawFromPositionalProvider(map::root, map::left, map::right, map::isInternal, canvas);
+        drawUnified(map::root, map::left, map::right, canvas);
     }
 
-    /* ----------------------------------------------------------
-       Helper genérico que dibuja utilizando funciones proveedoras
-       rootFn, leftFn, rightFn, isInternalFn (basado en Position<Entry<K,V>>)
-       ---------------------------------------------------------- */
-    private void drawFromPositionalProvider(
-            java.util.function.Supplier<Position<Entry<K, V>>> rootFn,
-            java.util.function.Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
-            java.util.function.Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn,
-            java.util.function.Function<Position<Entry<K, V>>, Boolean> isInternalFn,
-            Canvas canvas) {
+    private void calculatePositions(Position<Entry<K, V>> p, int depth,
+                                    Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
+                                    Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn) {
+        if (p == null || p.getElement() == null) return;
 
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        calculatePositions(leftFn.apply(p), depth + 1, leftFn, rightFn);
 
-        Position<Entry<K, V>> root = rootFn.get();
-        if (root == null || !isInternalFn.apply(root)) {
-            gc.setFill(Color.GRAY);
-            gc.setFont(new Font(20));
-            gc.fillText("Árbol vacío", canvas.getWidth() / 2 - 40, canvas.getHeight() / 2);
-            return;
-        }
+        xCounter++;
+        double x = xCounter * X_SPACING;
+        double y = depth * Y_SPACING;
+        positions.put(p, new Point(x, y));
 
-        // compute height using the provided functions
-        int height = treeHeightFromFns(root, leftFn, rightFn, isInternalFn);
-        double widthNeeded = Math.pow(2, height) * (NODE_RADIUS + H_SPACING);
-
-        canvas.setWidth(Math.max(canvas.getWidth(), widthNeeded));
-        canvas.setHeight(Math.max(canvas.getHeight(), height * LEVEL_HEIGHT + 100));
-
-        drawRecursiveFromFns(gc, root, leftFn, rightFn, isInternalFn, canvas.getWidth() / 2, 60, canvas.getWidth() / 4);
+        calculatePositions(rightFn.apply(p), depth + 1, leftFn, rightFn);
     }
 
-    /* recursive drawer for Tree interface (existing) */
-    private void drawRecursive(GraphicsContext gc, Tree<Entry<K, V>> tree, Position<Entry<K, V>> p,
-                               double x, double y, double offsetX) {
+    private void drawEdges(GraphicsContext gc, Position<Entry<K, V>> p,
+                           Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
+                           Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn) {
+        if (p == null || p.getElement() == null) return;
 
-        if (p == null) return;
-
-        drawNode(gc, p.getElement().getKey(), x, y);
-
-        Iterable<Position<Entry<K, V>>> children = tree.children(p);
-        Position<Entry<K, V>> left = null;
-        Position<Entry<K, V>> right = null;
-
-        int i = 0;
-        for (Position<Entry<K, V>> c : children) {
-            if (i == 0) left = c;
-            else right = c;
-            i++;
-        }
-
-        if (left != null) {
-            double newX = x - offsetX;
-            double newY = y + LEVEL_HEIGHT;
-            drawEdge(gc, x, y, newX, newY);
-            drawRecursive(gc, tree, left, newX, newY, offsetX / 2);
-        }
-
-        if (right != null) {
-            double newX = x + offsetX;
-            double newY = y + LEVEL_HEIGHT;
-            drawEdge(gc, x, y, newX, newY);
-            drawRecursive(gc, tree, right, newX, newY, offsetX / 2);
-        }
-    }
-
-    /* recursive drawer for positional-provider functions */
-    private void drawRecursiveFromFns(GraphicsContext gc, Position<Entry<K, V>> p,
-                                      java.util.function.Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
-                                      java.util.function.Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn,
-                                      java.util.function.Function<Position<Entry<K, V>>, Boolean> isInternalFn,
-                                      double x, double y, double offsetX) {
-
-        if (p == null) return;
-
-        drawNode(gc, p.getElement().getKey(), x, y);
-
+        Point myPos = positions.get(p);
+        
         Position<Entry<K, V>> left = leftFn.apply(p);
-        Position<Entry<K, V>> right = rightFn.apply(p);
-
-        if (isInternalFn.apply(left)) {
-            double newX = x - offsetX;
-            double newY = y + LEVEL_HEIGHT;
-            drawEdge(gc, x, y, newX, newY);
-            drawRecursiveFromFns(gc, left, leftFn, rightFn, isInternalFn, newX, newY, offsetX / 2);
+        if (left != null && left.getElement() != null) {
+            Point childPos = positions.get(left);
+            if (childPos != null) { // Safety check
+                drawEdge(gc, myPos.x, myPos.y, childPos.x, childPos.y);
+                drawEdges(gc, left, leftFn, rightFn);
+            }
         }
 
-        if (isInternalFn.apply(right)) {
-            double newX = x + offsetX;
-            double newY = y + LEVEL_HEIGHT;
-            drawEdge(gc, x, y, newX, newY);
-            drawRecursiveFromFns(gc, right, leftFn, rightFn, isInternalFn, newX, newY, offsetX / 2);
+        Position<Entry<K, V>> right = rightFn.apply(p);
+        if (right != null && right.getElement() != null) {
+            Point childPos = positions.get(right);
+            if (childPos != null) {
+                drawEdge(gc, myPos.x, myPos.y, childPos.x, childPos.y);
+                drawEdges(gc, right, leftFn, rightFn);
+            }
         }
     }
 
-    private void drawNode(GraphicsContext gc, Object value, double x, double y) {
+    private void drawNodes(GraphicsContext gc, Position<Entry<K, V>> p,
+                           Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
+                           Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn) {
+        if (p == null || p.getElement() == null) return;
+
+        Point myPos = positions.get(p);
+        drawNodeCircle(gc, p.getElement().getKey(), myPos.x, myPos.y);
+
+        drawNodes(gc, leftFn.apply(p), leftFn, rightFn);
+        drawNodes(gc, rightFn.apply(p), leftFn, rightFn);
+    }
+
+    private int getMaxDepth(Position<Entry<K, V>> p,
+                           Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
+                           Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn) {
+        if (p == null || p.getElement() == null) return 0;
+        int l = getMaxDepth(leftFn.apply(p), leftFn, rightFn);
+        int r = getMaxDepth(rightFn.apply(p), leftFn, rightFn);
+        return 1 + Math.max(l, r);
+    }
+
+    private void drawEmptyMessage(GraphicsContext gc, Canvas canvas) {
+        gc.setFill(Color.GRAY);
+        gc.setFont(new Font(20));
+        gc.fillText("Árbol vacío", 50, 50);
+    }
+
+    private void drawNodeCircle(GraphicsContext gc, Object value, double x, double y) {
         gc.setFill(nodeColor);
         gc.fillOval(x - NODE_RADIUS, y - NODE_RADIUS, NODE_RADIUS * 2, NODE_RADIUS * 2);
-
         gc.setStroke(Color.BLACK);
         gc.strokeOval(x - NODE_RADIUS, y - NODE_RADIUS, NODE_RADIUS * 2, NODE_RADIUS * 2);
-
         gc.setFill(Color.WHITE);
-        gc.setFont(new Font(14));
-        gc.fillText(String.valueOf(value), x - 6, y + 4);
+        gc.setFont(new Font("Arial", 12));
+        
+        String text = String.valueOf(value);
+        double textOffset = text.length() * 3.5;
+        gc.fillText(text, x - textOffset, y + 5);
     }
 
     private void drawEdge(GraphicsContext gc, double x1, double y1, double x2, double y2) {
@@ -185,24 +132,45 @@ public class TreeVisualizer<K, V> {
         gc.strokeLine(x1, y1, x2, y2);
     }
 
-    private int treeHeight(Tree<Entry<K, V>> tree, Position<Entry<K, V>> p) {
-        if (p == null) return 0;
+    private static class Point {
+        double x, y;
+        Point(double x, double y) { this.x = x; this.y = y; }
+    }
 
-        int max = 0;
-        for (Position<Entry<K, V>> child : tree.children(p)) {
-            int h = treeHeight(tree, child);
-            if (h > max) max = h;
+    private void drawUnified(
+            Supplier<Position<Entry<K, V>>> rootFn,
+            Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
+            Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn,
+            Canvas canvas) {
+
+        GraphicsContext gc = canvas.getGraphicsContext2D();
+        
+        gc.save();
+        gc.setTransform(1, 0, 0, 1, 0, 0); 
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        gc.restore();
+
+        Position<Entry<K, V>> root = rootFn.get();
+        
+        if (root == null || root.getElement() == null) {
+            drawEmptyMessage(gc, canvas);
+            return;
         }
-        return max + 1;
+
+        positions = new HashMap<>();
+        xCounter = 0;
+        calculatePositions(root, 1, leftFn, rightFn);
+
+        double treeWidth = (xCounter + 1) * X_SPACING + 100;
+        double treeHeight = getMaxDepth(root, leftFn, rightFn) * Y_SPACING + 100;
+
+        canvas.setWidth(treeWidth);
+        canvas.setHeight(treeHeight);
+ 
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        drawEdges(gc, root, leftFn, rightFn);
+        drawNodes(gc, root, leftFn, rightFn);
     }
 
-    private int treeHeightFromFns(Position<Entry<K, V>> p,
-                                  java.util.function.Function<Position<Entry<K, V>>, Position<Entry<K, V>>> leftFn,
-                                  java.util.function.Function<Position<Entry<K, V>>, Position<Entry<K, V>>> rightFn,
-                                  java.util.function.Function<Position<Entry<K, V>>, Boolean> isInternalFn) {
-        if (p == null) return 0;
-        int leftH = isInternalFn.apply(leftFn.apply(p)) ?  treeHeightFromFns(leftFn.apply(p), leftFn, rightFn, isInternalFn) : 0;
-        int rightH = isInternalFn.apply(rightFn.apply(p)) ? treeHeightFromFns(rightFn.apply(p), leftFn, rightFn, isInternalFn) : 0;
-        return 1 + Math.max(leftH, rightH);
-    }
 }

@@ -3,6 +3,7 @@ package com.example.controllers;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import com.example.services.HospitalService;
 import com.example.models.TriageLevel;
@@ -23,87 +24,69 @@ public class DashboardController {
 
     @FXML
     public void initialize() {
+        hospitalService.setOnArbolesChanged(this::refrescarDashboard);
+
         mostrarRegistro();
         refrescarDashboard();
     }
 
-    @FXML
-    private void mostrarRegistro() {
-        cargarVistaEnContentPane("/views/registro.fxml");
-    }
-
-    @FXML
-    private void mostrarAtender() {
-        cargarVistaEnContentPane("/views/atender.fxml");
-    }
-
-    @FXML
-    private void mostrarCola() {
-        cargarVistaEnContentPane("/views/cola.fxml");
-    }
-
-    @FXML
-    private void mostrarArboles() {
-        cargarVistaEnContentPane("/views/arboles.fxml");
-    }
-
-    @FXML
-    private void mostrarEstadisticas() {
-        cargarVistaEnContentPane("/views/estadisticas.fxml");
-    }
+    @FXML private void mostrarRegistro() { cargarVistaEnContentPane("/com/example/registro.fxml"); }
+    @FXML private void mostrarAtender() { cargarVistaEnContentPane("/com/example/atender.fxml"); }
+    @FXML private void mostrarCola() { cargarVistaEnContentPane("/com/example/cola.fxml"); }
+    @FXML private void mostrarArboles() { cargarVistaEnContentPane("/com/example/arboles.fxml"); }
+    @FXML private void mostrarEstadisticas() { cargarVistaEnContentPane("/com/example/estadisticas.fxml"); }
 
     @FXML
     private void refrescarDashboard() {
 
-        lblTotalPacientes.setText(String.valueOf(hospitalService.totalPacientes()));
-        lblEnEspera.setText(String.valueOf(hospitalService.totalEnEspera()));
+        javafx.application.Platform.runLater(() -> {
+            lblTotalPacientes.setText(String.valueOf(hospitalService.totalPacientes()));
+            lblEnEspera.setText(String.valueOf(hospitalService.totalEnEspera()));
 
-        lblUrgente.setText(String.valueOf(hospitalService.countByTriageLevel(TriageLevel.NIVEL_2_EMERGENCIA)));
-        lblMedio.setText(String.valueOf(hospitalService.countByTriageLevel(TriageLevel.NIVEL_3_URGENTE)));
-        lblLeve.setText(String.valueOf(hospitalService.countByTriageLevel(TriageLevel.NIVEL_5_NO_URGENTE)));
+            lblUrgente.setText(String.valueOf(hospitalService.countByTriageLevel(TriageLevel.NIVEL_2_EMERGENCIA)));
+            lblMedio.setText(String.valueOf(hospitalService.countByTriageLevel(TriageLevel.NIVEL_3_URGENTE)));
+            lblLeve.setText(String.valueOf(hospitalService.countByTriageLevel(TriageLevel.NIVEL_5_NO_URGENTE)));
 
-        if (hospitalService.getUltimoAtendido() != null) {
-            lblUltimoAtendido.setText("Último atendido: " + hospitalService.getUltimoAtendido().toString());
-        } else {
-            lblUltimoAtendido.setText("Último atendido: -");
-        }
+            if (hospitalService.getUltimoAtendido() != null) {
+                lblUltimoAtendido.setText("Último: " + hospitalService.getUltimoAtendido().getNombre());
+            } else {
+                lblUltimoAtendido.setText("Último: -");
+            }
+        });
     }
 
     private void cargarVistaEnContentPane(String fxmlPath) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
-            AnchorPane vista = loader.load();
+            Parent vista = loader.load(); 
 
             Object controller = loader.getController();
+            
             if (controller != null) {
                 try {
-                    var m = controller.getClass().getMethod("setHospitalService", HospitalService.class);
-                    if (m != null) {
-                        m.invoke(controller, hospitalService);
-                    }
+                    var method = controller.getClass().getMethod("setHospitalService", HospitalService.class);
+                    method.invoke(controller, hospitalService);
+                    System.out.println("DEBUG: Servicio inyectado correctamente en " + controller.getClass().getSimpleName());
                 } catch (NoSuchMethodException nsme) {
-                } catch (Throwable t) {
-                    t.printStackTrace();
+                    System.err.println("ADVERTENCIA: El controlador " + controller.getClass().getSimpleName() + " no tiene el método setHospitalService.");
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
             contentPane.getChildren().setAll(vista);
+
             AnchorPane.setTopAnchor(vista, 0.0);
             AnchorPane.setBottomAnchor(vista, 0.0);
             AnchorPane.setLeftAnchor(vista, 0.0);
             AnchorPane.setRightAnchor(vista, 0.0);
 
-            refrescarDashboard();
-
         } catch (IOException e) {
+            System.err.println("CRITICAL ERROR: No se pudo cargar el FXML: " + fxmlPath);
             e.printStackTrace();
         }
     }
-
-    public void solicitarRefresco() {
-        refrescarDashboard();
-    }
-
+    
     public HospitalService getHospitalService() {
         return hospitalService;
     }

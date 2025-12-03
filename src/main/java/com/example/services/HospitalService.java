@@ -18,6 +18,7 @@ public class HospitalService {
     private final TreeMap<Integer, Paciente> abbPacientes;
     private final AVLTreeMap<Integer, Paciente> avlPacientes;
     private final SplayTreeMap<Integer, Paciente> splayPacientes;
+    private Runnable onArbolesChanged;
 
     private final TriageService triageService;
 
@@ -35,6 +36,10 @@ public class HospitalService {
         this.triageService = new TriageService();
     }
 
+    public void setOnArbolesChanged(Runnable listener) {
+        this.onArbolesChanged = listener;
+    }
+
     public void registrarPaciente(Paciente p) {
 
         abbPacientes.put(p.getId(), p);
@@ -42,13 +47,9 @@ public class HospitalService {
         splayPacientes.put(p.getId(), p);
 
         triageService.addPaciente(p);
+        notificarCambios();
 
         totalInserciones++;
-    }
-
-    public Paciente buscarPaciente(int id) {
-        totalConsultas++;
-        return splayPacientes.get(id);
     }
 
     public boolean eliminarPaciente(int id) {
@@ -61,8 +62,14 @@ public class HospitalService {
 
         triageService.removeById(id);
 
+        notificarCambios();
         totalEliminaciones++;
         return true;
+    }
+
+    public Paciente buscarPaciente(int id) {
+        totalConsultas++;
+        return splayPacientes.get(id);
     }
 
     public Paciente atenderSiguiente() {
@@ -90,6 +97,7 @@ public class HospitalService {
         abbPacientes.put(id, p);
         avlPacientes.put(id, p);
         splayPacientes.put(id, p);
+        notificarCambios();
 
         return true;
     }
@@ -117,9 +125,8 @@ public class HospitalService {
     public Paciente getUltimoAtendido() { return ultimoAtendido; }
 
     public Paciente getMasConsultado() {
-        Entry<Integer, Paciente> root = (Entry<Integer, Paciente>) splayPacientes.root();
-        if (root == null) return null;
-        return root.getValue();
+        if (splayPacientes.isEmpty()) return null;
+        return splayPacientes.root().getElement().getValue();
     }
 
     public int getTotalConsultas() {
@@ -136,6 +143,20 @@ public class HospitalService {
 
     public int countByTriageLevel(TriageLevel level) {
     return triageService.countByLevel(level);
+    }
+
+    public Paciente verSiguiente() {
+    return triageService.peekNext();
+    }
+
+    private void notificarCambios() {
+        System.out.println("DEBUG: 1. notificarCambios() llamado en el Servicio.");
+        if (onArbolesChanged != null) {
+            System.out.println("DEBUG: 2. Ejecutando el listener (El controlador está escuchando).");
+            onArbolesChanged.run();
+        } else {
+            System.out.println("DEBUG: ERROR - onArbolesChanged es NULL. Nadie está escuchando.");
+        }
     }
 
     public TreeMap<Integer, Paciente> getABB() { return abbPacientes; }
